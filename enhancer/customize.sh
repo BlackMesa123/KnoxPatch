@@ -101,7 +101,35 @@ if $BOOTMODE; then
     touch "$MODPATH/system/lib64/libhal.wsm.samsung.so"
   fi
 
+  if [ -f "/vendor/lib/hw/camera.qcom.so" ]; then
+    if grep -q 'ro.boot.flash.locked' /vendor/lib/hw/camera.qcom.so; then
+      ui_print "I: Applying camera fix..."
+      mkdir -p "$MODPATH/system/vendor/lib/hw"
+      sed 's/ro.boot.flash.locked/ro.camera.notify_nfc/g' "/vendor/lib/hw/camera.qcom.so" > "$MODPATH/system/vendor/lib/hw/camera.qcom.so"
+      [ -f "/vendor/lib/hw/com.qti.chi.override.so" ] && sed 's/ro.boot.flash.locked/ro.camera.notify_nfc/g' "/vendor/lib/hw/com.qti.chi.override.so" > "$MODPATH/system/vendor/lib/hw/com.qti.chi.override.so"
+      if $IS64BIT; then
+        mkdir -p "$MODPATH/system/vendor/lib64/hw"
+        sed 's/ro.boot.flash.locked/ro.camera.notify_nfc/g' "/vendor/lib64/hw/camera.qcom.so" > "$MODPATH/system/vendor/lib64/hw/camera.qcom.so"
+        [ -f "/vendor/lib64/hw/com.qti.chi.override.so" ] && sed 's/ro.boot.flash.locked/ro.camera.notify_nfc/g' "/vendor/lib64/hw/com.qti.chi.override.so" > "$MODPATH/system/vendor/lib64/hw/com.qti.chi.override.so"
+      fi
+    fi
+  fi
+
+  ui_print "I: Fixing file permissions..."
   set_perm_recursive "$MODPATH" 0 0 0755 0644
+  set_perm_recursive "$MODPATH/system/lib" 0 0 0755 0644 "u:object_r:system_lib_file:s0"
+  $IS64BIT && set_perm_recursive "$MODPATH/system/lib64" 0 0 0755 0644 "u:object_r:system_lib_file:s0"
+  if [ -e "$MODPATH/system/vendor" ]; then
+    set_perm_recursive "$MODPATH/system/vendor" 0 2000 0755 0644 "u:object_r:vendor_file:s0"
+    set_perm "$MODPATH/system/vendor/lib/hw" 0 2000 0755 "u:object_r:vendor_hal_file:s0"
+    set_perm "$MODPATH/system/vendor/lib/hw/camera.qcom.so" 0 0 0644 "u:object_r:vendor_file:s0"
+    [ -f "$MODPATH/system/vendor/lib/hw/com.qti.chi.override.so" ] && set_perm "$MODPATH/system/vendor/lib/hw/com.qti.chi.override.so" 0 0 0644 "u:object_r:vendor_file:s0"
+    if $IS64BIT; then
+      set_perm "$MODPATH/system/vendor/lib64/hw" 0 2000 0755 "u:object_r:vendor_hal_file:s0"
+      set_perm "$MODPATH/system/vendor/lib64/hw/camera.qcom.so" 0 0 0644 "u:object_r:vendor_file:s0"
+      [ -f "$MODPATH/system/vendor/lib64/hw/com.qti.chi.override.so" ] && set_perm "$MODPATH/system/vendor/lib64/hw/com.qti.chi.override.so" 0 0 0644 "u:object_r:vendor_file:s0"
+    fi
+  fi
 else
   ui_print "- Installing from recovery"
 
