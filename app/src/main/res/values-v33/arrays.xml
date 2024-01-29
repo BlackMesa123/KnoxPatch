@@ -3,6 +3,7 @@
     <string-array name="scope">
         <item>android</item>
         <item>com.osp.app.signin</item>
+        <item>com.samsung.android.activation</item>
         <item>com.samsung.android.app.sharelive</item>
         <item>com.samsung.android.fast</item>
         <item>com.samsung.android.fmm</item>
